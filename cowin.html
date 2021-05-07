@@ -1,0 +1,178 @@
+<html>
+
+<head>
+    <title>Cowin Slot Finder</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container bg-white shadow mt-3 p-1" ng-app="myApp" ng-controller="myCtrl">
+
+        <div class="d-flex justify-content-around mb-3 top-img">
+            <img ng-click="changeAge(18)" ng-class="selectedAge === 18 ? 'bg-success opacity1': ''"
+                src="https://cdn2.vectorstock.com/i/1000x1000/08/91/young-people-couple-icon-vector-17490891.jpg" />
+            <img ng-click="changeAge(45)" ng-class="selectedAge === 45 ? 'bg-success opacity1': ''"
+                src="https://pics.freeicons.io/uploads/icons/png/21084115141548234984-512.png" />
+        </div>
+
+        <div class="d-flex justify-content-around mb-3">
+            <select class="border-0 p-3 m-3" ng-options="state as state.state_name for state in stateList"
+                ng-model="selectedState" ng-change="getDistrictData()">
+            </select>
+
+            <select class="border-0 p-3 m-3"
+                ng-options="district as district.district_name for district in districtList" ng-model="selectedDistrict"
+                ng-change="selectedDistrict && getCowinData()"></select>
+        </div>
+
+
+        <ul class="p-0 row">
+            <li class="col-lg-3 col-sm-6 p-3 mt-3 text-center" ng-repeat="center in availableSlots"
+                ng-class="center.sessions[0].vaccine === 'COVISHIELD' ? 'COVISHIELD': ''">
+                <div class="pl-5 pt-3 h-100 position-relative">
+                    <img width="50px" class="free_img"
+                        ng-src="{{center.fee_type === 'Free' ? 'https://icon-library.com/images/free-tag-icon/free-tag-icon-17.jpg' : 'https://www.onlygfx.com/wp-content/uploads/2017/12/paid-rectangle-stamp-2.png'}}" />
+                    <b>{{center.name}}</b><br />
+                    {{center.address}}
+                    <h3 class="availability"
+                        ng-class="getTotalAvailableSlots(center.sessions) > 50 ? 'bg-success': 'bg-danger'">
+                        {{getTotalAvailableSlots(center.sessions)}}
+                    </h3>
+                </div>
+            </li>
+        </ul>
+        <h3 ng-if="availableSlots.length === 0">No Slots Available for age group {{selectedAge}}</h3>
+    </div>
+</body>
+
+</html>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function ($scope, $http) {
+        $scope.selectedState = undefined
+        $scope.stateList = [];
+        $scope.districtList = [];
+        $scope.cowinData = [];
+        $scope.availableSlots = [];
+        $scope.selectedAge = 45;
+        const today = new Date().toJSON().split('T')[0].split('-').reverse().join('-')
+
+        getStates();
+
+        $scope.getTotalAvailableSlots = (allSlots) => {
+            return allSlots.reduce((accumulator, currentValue) => {
+                return accumulator + currentValue.available_capacity
+            }, 0)
+        }
+
+        $scope.getCowinData = () => {
+            $http({
+                method: "GET",
+                url: `https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=${$scope.selectedDistrict.district_id}&date=${today}`
+            }).then(function mySuccess(response) {
+                $scope.cowinData = response.data.centers;
+                $scope.availableSlots = response.data.centers.filter(center => center.sessions[0].available_capacity !== 0 &&
+                    center.sessions[0].min_age_limit === $scope.selectedAge)
+            });
+        }
+
+        function getStates() {
+            $http({
+                method: "GET",
+                url: "https://cdn-api.co-vin.in/api/v2/admin/location/states"
+            }).then(function mySuccess(response) {
+                $scope.stateList = response.data.states;
+                $scope.selectedState = response.data.states[0]
+                $scope.getDistrictData()
+            });
+        }
+
+        $scope.changeAge = (age) => {
+            $scope.selectedAge = age;
+            $scope.availableSlots = $scope.cowinData.filter(center => center.sessions[0].available_capacity !== 0 &&
+                center.sessions[0].min_age_limit === $scope.selectedAge)
+        }
+
+        $scope.getDistrictData = () => {
+            $http({
+                method: "GET",
+                url: "https://cdn-api.co-vin.in/api/v2/admin/location/districts/" + $scope.selectedState.state_id
+            }).then(function mySuccess(response) {
+                $scope.districtList = response.data.districts;
+                $scope.selectedDistrict = response.data.districts[0]
+                $scope.getCowinData()
+                setTimeout(() => {
+                    setInterval(() => {
+                        $scope.getCowinData()
+                    }, 10000)
+                }, 10000)
+            });
+        }
+    })
+</script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        color: teal;
+    }
+
+    select {
+        background-color: aliceblue;
+        font-size: 1.4rem;
+    }
+
+    .top-img img {
+        background-color: #ccc;
+        padding: 20px;
+        border-radius: 50px;
+        width: 100px;
+        height: 100px;
+        opacity: .6;
+        cursor: pointer;
+    }
+
+    .opacity1 {
+        opacity: 1 !important;
+    }
+
+    .COVISHIELD {
+        background: url(https://specials.manoramaonline.com/Onmanorama/2021/covid-vaccine/images/vaccine.png) no-repeat;
+        background-size: 23% 65%;
+        background-position: left bottom;
+    }
+
+    li {
+        background: url(https://cdn.downtoearth.org.in/library/large/2021-01-27/0.91012000_1611763920_457.jpg) no-repeat;
+        background-size: 50% 55%;
+        background-position: left bottom;
+        list-style-type: none;
+        min-height: 200px;
+        height: 200px;
+        font-size: 14px;
+    }
+
+    .free_img {
+        position: absolute;
+        top: -30px;
+        right: 0;
+    }
+
+    .availability {
+        width: 70px;
+        height: 70px;
+        background: cadetblue;
+        border-radius: 100px;
+        line-height: 70px;
+        color: #fff;
+        margin: auto;
+        position: absolute;
+        bottom: 5px;
+        left: 100px;
+        text-align: center;
+    }
+</style>
