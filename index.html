@@ -12,8 +12,7 @@
 
         <div class="d-flex justify-content-around mb-3 top-img">
             <div ng-class="selectedAge === 45 ? 'opacity1': 'opacity_less'">
-                <img ng-click="changeAge(45)" ng-class="selectedAge === 45 ? 'active': ''"
-                    src="./imgs/old.png" /><br />
+                <img ng-click="changeAge(45)" ng-class="selectedAge === 45 ? 'active': ''" src="./imgs/old.png" /><br />
                 <h4 class="text-center mt-3">45+</h4>
             </div>
 
@@ -51,8 +50,19 @@
                 </div>
             </li>
         </ul>
-        <h3 ng-if="availableSlots.length === 0">No Slots Available for age group {{selectedAge}}</h3>
+        <h4 ng-if="availableSlots.length === 0">No Slots Available for age group {{selectedAge}}</h4>
     </div>
+
+
+    <p class="footer">
+        <small>
+            Data source: <a href="https://www.cowin.gov.in/">cowin.gov.in</a><br />
+            Website Visit: <img
+                src="https://counter1.stat.ovh/private/freecounterstat.php?c=un8q1ej5k215zgp5g8z2g7w5mjpr9dt2"
+                border="0" title="website counter" alt="website counter">
+        </small>
+    </p>
+
 </body>
 
 </html>
@@ -202,5 +212,12 @@
         50% {
             border-color: #ffffff;
         }
+    }
+
+    .footer {
+        position: fixed;
+        width: 100%;
+        text-align: center;
+        bottom: 0;
     }
 </style>
