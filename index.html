@@ -64,7 +64,7 @@
 
     <p class="footer">
         <small>
-            Search your city to see only the places where vaccine is available.<br/>
+            Search your city to see only the places where vaccine is available.<br />
             Data source: <a href="https://www.cowin.gov.in/">cowin.gov.in</a><br />
             Website Visit: <img
                 src="https://counter1.stat.ovh/private/freecounterstat.php?c=un8q1ej5k215zgp5g8z2g7w5mjpr9dt2"
@@ -94,7 +94,7 @@
 
         $scope.getTotalAvailableSlots = (allSlots) => {
             return allSlots.reduce((accumulator, currentValue) => {
-                return accumulator + currentValue.available_capacity
+                return accumulator + parseInt(currentValue.available_capacity)
             }, 0)
         }
 
@@ -114,7 +114,7 @@
                 url: `https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=${$scope.selectedDistrict.district_id}&date=${today}`
             }).then(function mySuccess(response) {
                 $scope.cowinData = response.data.centers;
-                $scope.availableSlots = response.data.centers.filter(center => center.sessions[0].available_capacity !== 0 &&
+                $scope.availableSlots = response.data.centers.filter(center => parseInt(center.sessions[0].available_capacity) !== 0 &&
                     center.sessions[0].min_age_limit === $scope.selectedAge)
             });
         }
@@ -126,6 +126,9 @@
             }).then(function mySuccess(response) {
                 $scope.stateList = response.data.states;
                 $scope.selectedState = response.data.states.find(state => state.state_name.toLowerCase() === $scope.userLocation.region.toLowerCase())
+                if (!$scope.selectedState) {
+                    $scope.selectedState = response.data.states[0]
+                }
                 $scope.getDistrictData()
             });
         }
@@ -143,6 +146,10 @@
             }).then(function mySuccess(response) {
                 $scope.districtList = response.data.districts;
                 $scope.selectedDistrict = response.data.districts.find(district => district.district_name.toLowerCase() === $scope.userLocation.city.toLowerCase())
+                if ($scope.selectedState.state_name.toLowerCase() !== $scope.userLocation.region.toLowerCase() ||
+                    !$scope.selectedDistrict) {
+                    $scope.selectedDistrict = response.data.districts[0]
+                }
                 $scope.getCowinData()
                 $scope.isApiCallInProgress = false;
                 setTimeout(() => {
