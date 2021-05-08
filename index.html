@@ -101,7 +101,7 @@
         function getUserLocation() {
             $http({
                 method: "GET",
-                url: `http://ipinfo.io?token=66f7e89a412136`
+                url: `https://ipinfo.io?token=66f7e89a412136`
             }).then(function mySuccess(response) {
                 $scope.userLocation = response.data;
                 getStates();
